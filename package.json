@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "dependencies": {
     "bip39": "^3.0.3",
     "cors": "^2.8.5",

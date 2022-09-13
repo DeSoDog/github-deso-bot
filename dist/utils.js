@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -35,24 +34,22 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.uvarint64ToBuf = exports.getKey = exports.signTransaction = void 0;
-var elliptic_1 = require("elliptic");
-var sha256 = require("sha256");
-var bip39 = require("bip39");
-var HDKey = require("hdkey");
-var signTransaction = function (transactionHex) { return __awaiter(void 0, void 0, void 0, function () {
+import { ec as EC } from "elliptic";
+import * as sha256 from "sha256";
+import * as bip39 from "bip39";
+import * as HDKey from "hdkey";
+export var signTransaction = function (transactionHex) { return __awaiter(void 0, void 0, void 0, function () {
     var privateKey, transactionBytes, transactionHash, signature, signatureBytes, signatureLength, signedTransactionBytes;
     return __generator(this, function (_a) {
         switch (_a.label) {
-            case 0: return [4 /*yield*/, (0, exports.getKey)()];
+            case 0: return [4 /*yield*/, getKey()];
             case 1:
                 privateKey = _a.sent();
                 transactionBytes = Buffer.from(transactionHex, "hex");
                 transactionHash = Buffer.from(sha256.x2(transactionBytes), "hex");
                 signature = privateKey.sign(transactionHash, { canonical: true });
                 signatureBytes = Buffer.from(signature.toDER());
-                signatureLength = (0, exports.uvarint64ToBuf)(signatureBytes.length);
+                signatureLength = uvarint64ToBuf(signatureBytes.length);
                 signedTransactionBytes = Buffer.concat([
                     transactionBytes.slice(0, -1),
                     signatureLength,
@@ -62,11 +59,10 @@ var signTransaction = function (transactionHex) { return __awaiter(void 0, void 
         }
     });
 }); };
-exports.signTransaction = signTransaction;
-var getKey = function () { return __awaiter(void 0, void 0, void 0, function () {
+export var getKey = function () { return __awaiter(void 0, void 0, void 0, function () {
     var ec, seed, hdKey, seedHex;
     return __generator(this, function (_a) {
-        ec = new elliptic_1.ec("secp256k1");
+        ec = new EC("secp256k1");
         seed = bip39.mnemonicToSeedSync("weather noble barely volume bind lemon raven cruel diamond hover siren canvas");
         console.log("seed", seed);
         hdKey = HDKey.fromMasterSeed(seed).derive("m/44'/0'/0'/0/0", false);
@@ -74,8 +70,7 @@ var getKey = function () { return __awaiter(void 0, void 0, void 0, function () 
         return [2 /*return*/, ec.keyFromPrivate(seedHex)];
     });
 }); };
-exports.getKey = getKey;
-var uvarint64ToBuf = function (uint) {
+export var uvarint64ToBuf = function (uint) {
     var result = [];
     while (uint >= 0x80) {
         result.push(Number((BigInt(uint) & BigInt(0xff)) | BigInt(0x80)));
@@ -84,5 +79,4 @@ var uvarint64ToBuf = function (uint) {
     result.push(uint | 0);
     return Buffer.from(result);
 };
-exports.uvarint64ToBuf = uvarint64ToBuf;
 //# sourceMappingURL=utils.js.map
