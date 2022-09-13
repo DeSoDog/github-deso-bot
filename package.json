@@ -19,6 +19,8 @@
     "@uniswap/v3-sdk": "^3.9.0"
   },
   "scripts": {
-    "start": "npx tsc && node ./dist/index.js"
+    "start": "npx tsc && node ./dist/index.js",
+    "build": "npx tsc",
+    "run": "node ./dist/index.js"
   }
 }
