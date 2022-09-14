@@ -43,92 +43,94 @@ var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
     }
     return to.concat(ar || Array.prototype.slice.call(from));
 };
+import dotenv from "dotenv";
+dotenv.config();
 import cors from "cors";
 import { Deso } from "deso-protocol";
 import express from "express";
 var deso = new Deso({ identityConfig: { host: "server" } });
-var getSinglePost = function () { return __awaiter(void 0, void 0, void 0, function () {
-    var postData;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0: return [4 /*yield*/, deso.posts.getSinglePost({
-                    PostHashHex: "d30d715dfdc59955ae239635833367dd6c367bb52771bc47f507ccfb4060d53a",
-                })];
-            case 1:
-                postData = _a.sent();
-                return [2 /*return*/, postData];
-        }
-    });
-}); };
 var app = express();
 app.use(express.json());
 app.use(cors());
-var oy = "";
 var PORT = 3000;
 app.get("/", function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
-        res.send(oy);
+        res.send("hello");
+        return [2 /*return*/];
+    });
+}); });
+app.get("/core", function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var postMessage;
+    return __generator(this, function (_a) {
+        postMessage = constructPostMessage(req);
+        signAndSubmit(postMessage);
+        return [2 /*return*/];
+    });
+}); });
+app.get("/backend", function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
+    var postMessage;
+    return __generator(this, function (_a) {
+        postMessage = constructPostMessage(req);
+        signAndSubmit(postMessage);
         return [2 /*return*/];
     });
 }); });
 app.post("/deso-workspace", function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var commits, repo, message, keyPair, post, signedTransactionHex, e_1;
-    var _a, _b;
-    return __generator(this, function (_c) {
-        switch (_c.label) {
-            case 0:
-                commits = (_a = req.body) === null || _a === void 0 ? void 0 : _a.commits;
-                repo = (_b = req.body) === null || _b === void 0 ? void 0 : _b.repository;
-                oy = "";
-                if (!(commits.length > 0)) return [3 /*break*/, 5];
-                _c.label = 1;
-            case 1:
-                _c.trys.push([1, 4, , 5]);
-                message = __spreadArray([
-                    "".concat(commits[0].author.name, " Pushed to ").concat(repo.name.toString(), " \n"),
-                    "  Commits: \n"
-                ], commits.map(function (commit) {
-                    return "    ".concat(commit.author.name, ": ").concat(commit.message, " \u2705");
-                }), true).join("\n")
-                    .toString();
-                oy = message;
-                keyPair = deso.utils.generateKeyFromSource({
-                    mnemonic: "horn ripple stadium gallery wolf vast doll race blanket modify palm into",
-                });
-                return [4 /*yield*/, deso.posts.submitPost({
-                        UpdaterPublicKeyBase58Check: "BC1YLfiECJp52WjUGtdqo7rUxpWnYfqyxwL1CDRyDv2wddMxA1E4RtK",
-                    })];
-            case 2:
-                post = _c.sent();
-                post.constructedTransactionResponse.TransactionHex;
-                return [4 /*yield*/, deso.utils.signMessageLocally({
-                        keyPair: keyPair,
-                        transactionHex: post.constructedTransactionResponse.TransactionHex,
-                    })];
-            case 3:
-                signedTransactionHex = _c.sent();
-                deso.identity.submitTransaction(signedTransactionHex);
-                return [3 /*break*/, 5];
-            case 4:
-                e_1 = _c.sent();
-                console.log(e_1);
-                console.log("failed to post github status check");
-                return [3 /*break*/, 5];
-            case 5: return [2 /*return*/];
-        }
+    var postMessage;
+    return __generator(this, function (_a) {
+        postMessage = constructPostMessage(req);
+        signAndSubmit(postMessage);
+        return [2 /*return*/];
     });
 }); });
 app.listen(PORT, function () { return __awaiter(void 0, void 0, void 0, function () {
-    var keyPair, post, signedTransactionHex;
+    var response;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, signAndSubmit("hello")];
+            case 1:
+                response = _a.sent();
+                return [2 /*return*/];
+        }
+    });
+}); });
+var constructPostMessage = function (req) {
+    var _a, _b;
+    var commits = (_a = req.body) === null || _a === void 0 ? void 0 : _a.commits;
+    var repo = (_b = req.body) === null || _b === void 0 ? void 0 : _b.repository;
+    if (commits.length > 0) {
+        try {
+            var message = __spreadArray([
+                "".concat(commits[0].author.name, " Pushed to ").concat(repo.name.toString(), " \n"),
+                "  Commits: \n"
+            ], commits.map(function (commit) {
+                return "    ".concat(commit.author.name, ": ").concat(commit.message, " \u2705");
+            }), true).join("\n")
+                .toString();
+            return message;
+        }
+        catch (e) {
+            // console.log(e);
+            throw Error("construction of post failed");
+        }
+    }
+};
+var signAndSubmit = function (postMessage) { return __awaiter(void 0, void 0, void 0, function () {
+    var keyPair, UpdaterPublicKeyBase58Check, post, signedTransactionHex, response;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
                 keyPair = deso.utils.generateKeyFromSource({
-                    mnemonic: "horn ripple stadium gallery wolf vast doll race blanket modify palm into",
+                    mnemonic: process.env.MNEMONIC,
                 });
-                console.log(keyPair);
+                UpdaterPublicKeyBase58Check = deso.utils.privateKeyToDeSoPublicKey(keyPair);
                 return [4 /*yield*/, deso.posts.submitPost({
-                        UpdaterPublicKeyBase58Check: "BC1YLfiECJp52WjUGtdqo7rUxpWnYfqyxwL1CDRyDv2wddMxA1E4RtK",
+                        UpdaterPublicKeyBase58Check: UpdaterPublicKeyBase58Check,
+                        BodyObj: {
+                            Body: postMessage,
+                            ImageURLs: [],
+                            VideoURLs: [],
+                        },
                     })];
             case 1:
                 post = _a.sent();
@@ -139,10 +141,11 @@ app.listen(PORT, function () { return __awaiter(void 0, void 0, void 0, function
                     })];
             case 2:
                 signedTransactionHex = _a.sent();
-                deso.identity.submitTransaction(signedTransactionHex);
-                console.log("listening on port 3000");
-                return [2 /*return*/];
+                return [4 /*yield*/, deso.transaction.submitTransaction(signedTransactionHex)];
+            case 3:
+                response = _a.sent();
+                return [2 /*return*/, {}];
         }
     });
-}); });
+}); };
 //# sourceMappingURL=index.js.map

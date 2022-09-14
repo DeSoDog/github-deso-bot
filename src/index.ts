@@ -1,6 +1,10 @@
+import dotenv from "dotenv";
+dotenv.config();
+import bs58check from "bs58check";
 import cors from "cors";
 import { Deso } from "deso-protocol";
 import express from "express";
+
 export interface Commit {
   id: string;
   tree_id: string;
@@ -46,13 +50,6 @@ export interface Repository {
   owner: Owner;
 }
 const deso = new Deso({ identityConfig: { host: "server" } });
-const getSinglePost = async () => {
-  const postData = await deso.posts.getSinglePost({
-    PostHashHex:
-      "d30d715dfdc59955ae239635833367dd6c367bb52771bc47f507ccfb4060d53a",
-  });
-  return postData;
-};
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -63,56 +60,24 @@ app.get("/", async (req, res) => {
   res.send("hello");
 });
 
-app.get("/core", async (req, res) => {});
+app.get("/core", async (req, res) => {
+  const postMessage = constructPostMessage(req);
+  signAndSubmit(postMessage);
+});
 
-app.get("/backend", async (req, res) => {});
+app.get("/backend", async (req, res) => {
+  const postMessage = constructPostMessage(req);
+  signAndSubmit(postMessage);
+});
+
 app.post("/deso-workspace", async (req, res) => {
-const postMessage = constructPostMessage(req)
-      const keyPair = deso.utils.generateKeyFromSource({
-        mnemonic:
-          "horn ripple stadium gallery wolf vast doll race blanket modify palm into",
-      });
-
-      const post = await deso.posts.submitPost({
-        UpdaterPublicKeyBase58Check:
-          "BC1YLfiECJp52WjUGtdqo7rUxpWnYfqyxwL1CDRyDv2wddMxA1E4RtK",
-      });
-      post.constructedTransactionResponse.TransactionHex;
-
-      const signedTransactionHex = await deso.utils.signMessageLocally({
-        keyPair,
-        transactionHex: post.constructedTransactionResponse.TransactionHex,
-      });
-
-      deso.identity.submitTransaction(signedTransactionHex);
-  }
+  const postMessage = constructPostMessage(req);
+  signAndSubmit(postMessage);
 });
 
-app.listen(PORT, async () => {
-  const keyPair = deso.utils.generateKeyFromSource({
-    mnemonic:
-      "horn ripple stadium gallery wolf vast doll race blanket modify palm into",
-  });
-  console.log(keyPair);
+app.listen(PORT, async () => {});
 
-  const post = await deso.posts.submitPost({
-    UpdaterPublicKeyBase58Check:
-      "BC1YLfiECJp52WjUGtdqo7rUxpWnYfqyxwL1CDRyDv2wddMxA1E4RtK",
-  });
-  post.constructedTransactionResponse.TransactionHex;
-
-  const signedTransactionHex = await deso.utils.signMessageLocally({
-    keyPair,
-    transactionHex: post.constructedTransactionResponse.TransactionHex,
-  });
-
-  deso.identity.submitTransaction(signedTransactionHex);
-  console.log("listening on port 3000");
-});
-
-// helpers
-
-const constructPostMessage = (req: {body: any}):string  =>{
+const constructPostMessage = (req: { body: any }): string => {
   const commits: Commit[] = req.body?.commits;
   const repo: Repository = req.body?.repository;
   if (commits.length > 0) {
@@ -126,10 +91,38 @@ const constructPostMessage = (req: {body: any}):string  =>{
       ]
         .join("\n")
         .toString();
-        return message
+      return message;
     } catch (e) {
-      console.log(e);
+      // console.log(e);
       throw Error("construction of post failed");
-    }}
+    }
+  }
+};
+const signAndSubmit = async (postMessage: string): Promise<any> => {
+  const keyPair = deso.utils.generateKeyFromSource({
+    mnemonic: process.env.MNEMONIC,
+  });
+  const UpdaterPublicKeyBase58Check =
+    deso.utils.privateKeyToDeSoPublicKey(keyPair);
 
-}
+  const post = await deso.posts.submitPost({
+    UpdaterPublicKeyBase58Check,
+    BodyObj: {
+      Body: postMessage,
+      ImageURLs: [],
+      VideoURLs: [],
+    },
+  });
+
+  post.constructedTransactionResponse.TransactionHex;
+
+  const signedTransactionHex = await deso.utils.signMessageLocally({
+    keyPair,
+    transactionHex: post.constructedTransactionResponse.TransactionHex,
+  });
+  const response = await deso.transaction.submitTransaction(
+    signedTransactionHex
+  );
+  return response;
+  // return response;
+};
