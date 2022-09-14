@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
 dotenv.config();
-import bs58check from "bs58check";
 import cors from "cors";
 import { Deso } from "deso-protocol";
 import express from "express";
@@ -93,7 +92,6 @@ const constructPostMessage = (req: { body: any }): string => {
         .toString();
       return message;
     } catch (e) {
-      // console.log(e);
       throw Error("construction of post failed");
     }
   }
@@ -124,5 +122,4 @@ const signAndSubmit = async (postMessage: string): Promise<any> => {
     signedTransactionHex
   );
   return response;
-  // return response;
 };

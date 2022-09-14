@@ -2,7 +2,6 @@
   "type": "module",
   "dependencies": {
     "bip39": "^3.0.3",
-    "bs58check": "^2.1.2",
     "cors": "^2.8.5",
     "deso-protocol": "^0.7.12",
     "dotenv": "^16.0.2",
